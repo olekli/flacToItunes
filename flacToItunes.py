@@ -34,7 +34,11 @@ metadataMapping = {
     'albumartist': 'album artist',
     'tracknumber': 'track number',
     'date': 'year',
-    'comment': 'comment'
+    'comment': 'comment',
+    'genre': 'genre',
+    'tracktotal': 'track count',
+    'description': 'description',
+    'discnmuber': 'disc number'
   }
 
 def mkScriptHead(filename):
