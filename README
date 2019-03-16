@@ -1,0 +1,12 @@
+Usage:
+
+  flacToItunes.py filenames...
+
+Converts the specified FLAC files to WAVE, adds them to iTunes, set
+metadata in iTunes according to metadata found in FLAC file. Finally
+converts the WAVE in iTunes to Apple Lossless and removes the WAVE.
+
+If some metadata field remains empty in iTunes, you may have to provide
+a mapping from the name of the FLAC metadata tag to whatever name iTunes
+uses for that field. You can do that by extending the `metadataMapping`
+dictionary found at the beginning of the python script.
