@@ -45,7 +45,8 @@ def mkScriptHead(filename):
   return [
       'set thisFile to POSIX file \"' + filename + '\" as alias',
       'tell application \"iTunes\"',
-      'set thisTrack to add thisFile',
+      'set plist to make new user playlist',
+      'set thisTrack to add thisFile to plist'
     ]
 
 def mkScriptTail():
@@ -61,47 +62,64 @@ def mkScriptMetadata(metadata):
       result.append(mkMetadataAssignment(metadataMapping[key], metadata[key][0]))
   return result
 
-def mkScriptConvert():
-  return [
-      'set old_encoder to current encoder',
-      'set current encoder to encoder "Lossless Encoder"',
-      'convert thisTrack',
-      'set current encoder to old_encoder',
-      'delete thisTrack'
-    ]
+def mkScriptSetArtwork(filename_artwork):
+  if filename_artwork:
+    return [
+        'set data of artwork 1 of thisTrack to thisArtwork'
+      ]
+  else:
+    return []
 
-def mkScript(filename, metadata):
-  return mkScriptHead(filename) + \
+def mkScriptReadArtwork(filename_artwork):
+  if filename_artwork:
+    return [
+        'set thisArtwork to (read (POSIX file \"' + filename_artwork + '\") as data)'
+      ]
+  else:
+    return []
+
+def mkScript(filename, metadata, filename_artwork):
+  return mkScriptReadArtwork(filename_artwork) + \
+         mkScriptHead(filename) + \
          mkScriptMetadata(metadata) + \
-         mkScriptConvert() + \
+         mkScriptSetArtwork(filename_artwork) + \
          mkScriptTail()
 
 def mkOsascriptCommandline(script):
+  print(script)
   return [ 'osascript' ] + [ x for y in script for x in [ '-e', y ] ]
 
 def getMetadata(filename):
   return mutagen.File(filename)
 
-def addFile(filename):
+def addFile(path):
+  filename = os.path.basename(path)
   with tempfile.TemporaryDirectory() as tmpdir:
     filename_wave = os.path.join(tmpdir, os.path.splitext(filename)[0] + '.wav')
     subprocess.run(
-        ['flac', '-d', '-o', filename_wave, filename],
+        ['flac', '-d', '-o', filename_wave, path],
         check=True
       )
 
-    metadata = getMetadata(filename)
+    filename_alac = os.path.join(tmpdir, os.path.splitext(filename)[0] + '.m4a')
+    subprocess.run(
+        ['afconvert', '-d', 'alac', filename_wave, filename_alac],
+        check=True
+      )
 
+    metadata = getMetadata(path)
+
+    filename_artwork = ''
     if metadata.pictures and metadata.pictures[0].mime == 'image/jpeg':
-      filename_artwork = os.path.splitext(filename)[0] + '.jpeg'
+      filename_artwork = os.path.join(tmpdir, 'artwork.jpg')
       with open(filename_artwork, 'wb') as file_artwork:
         file_artwork.write(metadata.pictures[0].data)
 
-    script = mkScript(filename_wave, metadata)
+    script = mkScript(filename_alac, metadata, filename_artwork)
     script_commandline = mkOsascriptCommandline(script)
     subprocess.run(script_commandline, check=True)
     print('added file: ' + filename)
     print(str(metadata))
 
-for filename in sys.argv[1:]:
-  addFile(filename)
+for path in sys.argv[1:]:
+  addFile(path)
