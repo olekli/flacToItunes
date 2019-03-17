@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 
 # Copyright 2019 Ole Kliemann
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -89,7 +89,14 @@ def addFile(filename):
         ['flac', '-d', '-o', filename_wave, filename],
         check=True
       )
+
     metadata = getMetadata(filename)
+
+    if metadata.pictures and metadata.pictures[0].mime == 'image/jpeg':
+      filename_artwork = os.path.splitext(filename)[0] + '.jpeg'
+      with open(filename_artwork, 'wb') as file_artwork:
+        file_artwork.write(metadata.pictures[0].data)
+
     script = mkScript(filename_wave, metadata)
     script_commandline = mkOsascriptCommandline(script)
     subprocess.run(script_commandline, check=True)
