@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 
 # Copyright 2019 Ole Kliemann
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -45,7 +45,8 @@ def mkScriptHead(filename):
   return [
       'set thisFile to POSIX file \"' + filename + '\" as alias',
       'tell application \"iTunes\"',
-      'set thisTrack to add thisFile',
+      'set plist to make new user playlist',
+      'set thisTrack to add thisFile to plist'
     ]
 
 def mkScriptTail():
@@ -70,13 +71,32 @@ def mkScriptConvert():
       'delete thisTrack'
     ]
 
-def mkScript(filename, metadata):
-  return mkScriptHead(filename) + \
+def mkScriptSetArtwork(filename_artwork):
+  if filename_artwork:
+    return [
+        'set data of artwork 1 of thisTrack to thisArtwork'
+      ]
+  else:
+    return []
+
+def mkScriptReadArtwork(filename_artwork):
+  if filename_artwork:
+    return [
+        'set thisArtwork to (read (POSIX file \"' + filename_artwork + '\") as data)'
+      ]
+  else:
+    return []
+
+def mkScript(filename, metadata, filename_artwork):
+  return mkScriptReadArtwork(filename_artwork) + \
+         mkScriptHead(filename) + \
          mkScriptMetadata(metadata) + \
+         mkScriptSetArtwork(filename_artwork) + \
          mkScriptConvert() + \
          mkScriptTail()
 
 def mkOsascriptCommandline(script):
+  print(script)
   return [ 'osascript' ] + [ x for y in script for x in [ '-e', y ] ]
 
 def getMetadata(filename):
@@ -89,8 +109,16 @@ def addFile(filename):
         ['flac', '-d', '-o', filename_wave, filename],
         check=True
       )
+
     metadata = getMetadata(filename)
-    script = mkScript(filename_wave, metadata)
+
+    filename_artwork = ''
+    if metadata.pictures and metadata.pictures[0].mime == 'image/jpeg':
+      filename_artwork = os.path.join(tmpdir, 'artwork.jpg')
+      with open(filename_artwork, 'wb') as file_artwork:
+        file_artwork.write(metadata.pictures[0].data)
+
+    script = mkScript(filename_wave, metadata, filename_artwork)
     script_commandline = mkOsascriptCommandline(script)
     subprocess.run(script_commandline, check=True)
     print('added file: ' + filename)
