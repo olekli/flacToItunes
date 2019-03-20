@@ -45,7 +45,9 @@ def mkScriptHead(filename):
   return [
       'set thisFile to POSIX file \"' + filename + '\" as alias',
       'tell application \"iTunes\"',
-      'set thisTrack to add thisFile'
+      'set plist to make new user playlist',
+      'set thisTrack to add thisFile to plist',
+      'delete plist'
     ]
 
 def mkScriptTail():
