@@ -1,6 +1,16 @@
-Usage:
+# Installation
 
-  flacToItunes.py filenames...
+You will need to install `mutagen`:
+
+```
+pip install mutagen
+```
+
+# Usage
+
+```
+flacToItunes.py filenames...
+```
 
 Converts the specified FLAC files to ALAC using `flac` and `afconvert`.
 Adds them to iTunes, set metadata in iTunes according to metadata found
