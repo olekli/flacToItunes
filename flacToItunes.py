@@ -47,11 +47,13 @@ def mkScriptHead(filename):
       'tell application \"iTunes\"',
       'set plist to make new user playlist',
       'set thisTrack to add thisFile to plist',
-      'delete plist'
     ]
 
 def mkScriptTail():
-  return ['end tell']
+  return [
+      'delete plist',
+      'end tell'
+    ]
 
 def mkMetadataAssignment(field, value):
   return 'set ' + field + ' of thisTrack to \"' + value + '\"'
