@@ -44,7 +44,7 @@ metadataMapping = {
 def mkScriptHead(filename):
   return [
       'set thisFile to POSIX file \"' + filename + '\" as alias',
-      'tell application \"iTunes\"',
+      'tell application \"Music\"',
       'set plist to make new user playlist',
       'set thisTrack to add thisFile to plist',
     ]
