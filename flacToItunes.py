@@ -118,11 +118,36 @@ def addFile(path):
       with open(filename_artwork, 'wb') as file_artwork:
         file_artwork.write(metadata.pictures[0].data)
 
+
     script = mkScript(filename_alac, metadata, filename_artwork)
     script_commandline = mkOsascriptCommandline(script)
-    subprocess.run(script_commandline, check=True)
+    i = 0
+    while True:
+      try:
+        subprocess.run(script_commandline, check=True)
+      except:
+        i = i + 1
+        if i < 10:
+          print('retrying...')
+          continue
+        else:
+          raise
+      break
     print('added file: ' + filename)
     print(str(metadata))
 
+def addDir(path):
+  for p in os.listdir(path):
+    addPath(os.path.join(path, p))
+
+def addPath(path):
+  if os.path.isfile(path):
+    addFile(path)
+  elif os.path.isdir(path):
+    addDir(path)
+  else:
+    print('invalid path: ' + path)
+    exit(1)
+
 for path in sys.argv[1:]:
-  addFile(path)
+  addPath(path)
